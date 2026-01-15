@@ -1,0 +1,52 @@
+# Advertools SEO Crawler Configuration
+
+# Sitemap Settings
+sitemap:
+  urls:
+    - "https://example.com/sitemap.xml"
+  recursive: true
+  output_file: "/app/output/sitemap_data.jl"
+
+# Crawl Settings
+crawl:
+  start_urls:
+    - "https://example.com"
+  output_file: "/app/output/crawl_output.jl"
+  follow_links: true
+  max_depth: 3
+  css_selectors:
+    - "title"
+    - "meta[name='description']"
+    - "h1"
+    - "h2"
+  xpath_selectors: []
+  custom_settings:
+    USER_AGENT: "Mozilla/5.0 (compatible; AdvertoolsCrawler/1.0)"
+    ROBOTSTXT_OBEY: true
+    CONCURRENT_REQUESTS: 8
+    DOWNLOAD_DELAY: 0.5
+    DEPTH_LIMIT: 3
+
+# SEM Rush Settings
+semrush:
+  api_key: ""  # Add your SEM Rush API key here or use environment variable
+
+# Google Ads Settings
+google_ads:
+  developer_token: ""
+  client_id: ""
+  client_secret: ""
+  refresh_token: ""
+
+# Twitter Settings
+twitter:
+  bearer_token: ""  # Add your Twitter Bearer Token
+
+# YouTube Settings
+youtube:
+  api_key: ""  # Add your YouTube API key
+
+# Export Settings
+export:
+  format: "jsonlines"  # Options: jsonlines, csv, parquet
+  compression: "gzip"  # Options: gzip, bz2, none

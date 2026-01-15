@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  advertools:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: advertools_crawler
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config
+      - ./output:/app/output
+      - ./scripts:/app/scripts
+    environment:
+      - PYTHONUNBUFFERED=1
+      - CONFIG_PATH=/app/config/config.yaml
+    working_dir: /app
+    stdin_open: true
+    tty: true
+    command: tail -f /dev/null  # Keep container running for interactive use
+    networks:
+      - advertools_network
+
+networks:
+  advertools_network:
+    driver: bridge
