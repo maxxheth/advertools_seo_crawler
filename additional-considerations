@@ -1,0 +1,5 @@
+Export scheduling? - Add cron-like scheduler for automated periodic crawls (daily/weekly/monthly) and automatic report generation?
+Crawler priority system? - When running concurrent crawlers, should there be priority levels or round-robin resource allocation?
+S3 public URLs? - Generate pre-signed URLs for screenshot access in dashboard, or assume private bucket with credentials?
+Performance monitoring? - Track crawler performance metrics (pages/second, memory usage) and display in dashboard?
+Notification system? - Send alerts (email/Slack/Discord) when crawls complete or critical issues found?

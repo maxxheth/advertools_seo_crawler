@@ -1,52 +1,150 @@
 # Advertools SEO Crawler Configuration
 
-# Sitemap Settings
-sitemap:
-  urls:
-    - "https://example.com/sitemap.xml"
-  recursive: true
-  output_file: "/app/output/sitemap_data.jl"
-
 # Crawl Settings
-crawl:
-  start_urls:
-    - "https://example.com"
-  output_file: "/app/output/crawl_output.jl"
+crawl_settings:
+  default_page_limit: 500
   follow_links: true
-  max_depth: 3
-  css_selectors:
-    - "title"
-    - "meta[name='description']"
-    - "h1"
-    - "h2"
-  xpath_selectors: []
-  custom_settings:
-    USER_AGENT: "Mozilla/5.0 (compatible; AdvertoolsCrawler/1.0)"
-    ROBOTSTXT_OBEY: true
-    CONCURRENT_REQUESTS: 8
-    DOWNLOAD_DELAY: 0.5
-    DEPTH_LIMIT: 3
+  concurrent_crawlers: true
+  max_concurrent: 3
+  page_limits:
+    local_seo: 500
+    general_seo: 500
+    blogging: 500
+    ecommerce: 500
+    news_media: 500
+    technical_seo: 500
+    competitor: 500
 
-# SEM Rush Settings
-semrush:
-  api_key: ""  # Add your SEM Rush API key here or use environment variable
+# Crawler Types Configuration
+crawler_types:
+  
+  local_seo:
+    enabled: true
+    css_selectors: []  # Uses defaults from crawler class
+    xpath_selectors: []
+    custom_settings:
+      USER_AGENT: "Mozilla/5.0 (compatible; AdvertoolsCrawler/1.0)"
+      ROBOTSTXT_OBEY: true
+      CONCURRENT_REQUESTS: 5
+      DOWNLOAD_DELAY: 0.5
+    validation_rules:
+      require_nap: true
+      check_schema: ['LocalBusiness']
+    output_file: "/app/output/local_seo_crawl.jl"
 
-# Google Ads Settings
-google_ads:
-  developer_token: ""
-  client_id: ""
-  client_secret: ""
-  refresh_token: ""
+  general_seo:
+    enabled: true
+    custom_settings:
+      USER_AGENT: "Mozilla/5.0 (compatible; AdvertoolsCrawler/1.0)"
+      ROBOTSTXT_OBEY: true
+      CONCURRENT_REQUESTS: 8
+      DOWNLOAD_DELAY: 0.5
+    output_file: "/app/output/general_seo_crawl.jl"
 
-# Twitter Settings
-twitter:
-  bearer_token: ""  # Add your Twitter Bearer Token
+  blogging:
+    enabled: false
+    custom_settings:
+      USER_AGENT: "Mozilla/5.0 (compatible; AdvertoolsCrawler/1.0)"
+      ROBOTSTXT_OBEY: true
+      CONCURRENT_REQUESTS: 8
+      DOWNLOAD_DELAY: 0.5
+    output_file: "/app/output/blog_crawl.jl"
 
-# YouTube Settings
-youtube:
-  api_key: ""  # Add your YouTube API key
+  ecommerce:
+    enabled: false
+    custom_settings:
+      USER_AGENT: "Mozilla/5.0 (compatible; AdvertoolsCrawler/1.0)"
+      ROBOTSTXT_OBEY: true
+      CONCURRENT_REQUESTS: 8
+      DOWNLOAD_DELAY: 0.5
+    output_file: "/app/output/ecommerce_crawl.jl"
 
-# Export Settings
-export:
-  format: "jsonlines"  # Options: jsonlines, csv, parquet
-  compression: "gzip"  # Options: gzip, bz2, none
+  news_media:
+    enabled: false
+    custom_settings:
+      USER_AGENT: "Mozilla/5.0 (compatible; AdvertoolsCrawler/1.0)"
+      ROBOTSTXT_OBEY: true
+      CONCURRENT_REQUESTS: 8
+      DOWNLOAD_DELAY: 0.5
+    output_file: "/app/output/news_crawl.jl"
+
+  technical_seo:
+    enabled: false
+    measurement_mode: "structure_only"  # structure_only or measure_vitals
+    take_screenshots: false
+    check_responsiveness: "all"  # all, mobile, desktop, tablet
+    custom_settings:
+      USER_AGENT: "Mozilla/5.0 (compatible; AdvertoolsCrawler/1.0)"
+      ROBOTSTXT_OBEY: true
+      CONCURRENT_REQUESTS: 5
+      DOWNLOAD_DELAY: 1
+    output_file: "/app/output/technical_seo_crawl.jl"
+
+  competitor:
+    enabled: false
+    custom_settings:
+      USER_AGENT: "Mozilla/5.0 (compatible; AdvertoolsCrawler/1.0)"
+      ROBOTSTXT_OBEY: true
+      CONCURRENT_REQUESTS: 8
+      DOWNLOAD_DELAY: 0.5
+    output_file: "/app/output/competitor_crawl.jl"
+
+# Output Settings
+output_settings:
+  output_path: "/app/output"
+  export_formats:
+    - csv
+    - jsonlines
+    - html
+  default_format: "jsonlines"
+
+# Analysis Settings
+analysis_settings:
+  enable_reports: true
+  report_storage: "/app/reports"
+  generate_html_dashboard: true
+
+# Watch Mode (Real-time monitoring)
+watch_settings:
+  enabled: false
+  websocket_port: 8765
+  websocket_host: "0.0.0.0"
+
+# Report Retention
+report_retention:
+  days: 30
+  compression: "gzip"  # gzip, bz2, or none
+  auto_cleanup: true
+  archive_old_reports: true
+
+# Storage Configuration
+storage:
+  screenshot_storage: "local"  # local or s3
+  local_path: "/app/screenshots"
+  compression: "gzip"
+  
+  # S3 Configuration (if using S3)
+  s3_bucket: ""
+  s3_region: "us-east-1"
+  s3_access_key: ""
+  s3_secret_key: ""
+
+# Dashboard Settings
+dashboard:
+  mode: "development"  # development or production
+  auto_refresh_interval: 30  # seconds
+  port: 3000
+  enable_websocket_monitoring: true
+
+# API Integrations (optional)
+api_credentials:
+  semrush_api_key: ""
+  google_ads:
+    developer_token: ""
+    client_id: ""
+    client_secret: ""
+    refresh_token: ""
+  twitter:
+    bearer_token: ""
+  youtube:
+    api_key: ""

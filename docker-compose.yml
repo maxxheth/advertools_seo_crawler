@@ -10,17 +10,76 @@ services:
       - ./data:/app/data
       - ./config:/app/config
       - ./output:/app/output
+      - ./reports:/app/reports
+      - ./screenshots:/app/screenshots
       - ./scripts:/app/scripts
     environment:
       - PYTHONUNBUFFERED=1
       - CONFIG_PATH=/app/config/config.yaml
+      - WATCH_MODE=${WATCH_MODE:-false}
+      - WATCH_PORT=8765
+      - DASHBOARD_MODE=${DASHBOARD_MODE:-development}
+      - AUTO_REFRESH_INTERVAL=${AUTO_REFRESH_INTERVAL:-30}
+      - DEFAULT_PAGE_LIMIT=${DEFAULT_PAGE_LIMIT:-500}
+      - MAX_CONCURRENT_CRAWLERS=${MAX_CONCURRENT_CRAWLERS:-3}
+      - SCREENSHOT_STORAGE=${SCREENSHOT_STORAGE:-local}
+      - REPORT_RETENTION_DAYS=${REPORT_RETENTION_DAYS:-30}
     working_dir: /app
     stdin_open: true
     tty: true
-    command: tail -f /dev/null  # Keep container running for interactive use
+    command: tail -f /dev/null  # Keep container running
     networks:
       - advertools_network
+    ports:
+      - "8765:8765"  # WebSocket port
+    restart: unless-stopped
+
+  dashboard-dev:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile.dev
+    container_name: advertools_dashboard_dev
+    volumes:
+      - ./dashboard:/app/dashboard
+      - ./reports:/app/reports
+      - ./screenshots:/app/screenshots
+    environment:
+      - DASHBOARD_MODE=development
+      - WEBSOCKET_URL=ws://localhost:8765
+      - AUTO_REFRESH_INTERVAL=30
+    working_dir: /app/dashboard
+    command: bun run dev
+    networks:
+      - advertools_network
+    ports:
+      - "3000:3000"
+    depends_on:
+      - advertools
+    profiles:
+      - dev
+
+  dashboard-prod:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile.prod
+    container_name: advertools_dashboard_prod
+    volumes:
+      - ./reports:/app/reports
+      - ./screenshots:/app/screenshots
+      - ./dashboard/dist:/usr/share/nginx/html
+    environment:
+      - DASHBOARD_MODE=production
+    working_dir: /app/dashboard
+    networks:
+      - advertools_network
+    ports:
+      - "80:80"
+    depends_on:
+      - advertools
+    profiles:
+      - prod
 
 networks:
   advertools_network:
     driver: bridge
+

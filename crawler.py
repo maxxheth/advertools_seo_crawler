@@ -1,95 +1,126 @@
 #!/usr/bin/env python3
 """
-Advertools SEO Crawler - Main Script
+Advertools SEO Crawler - Main Entry Point
+Advanced web crawling and analysis system with specialized crawlers for different use cases.
 """
 import os
-import yaml
-import advertools as adv
-from pathlib import Path
+import sys
+from utils.config_loader import load_config
+from crawlers.crawler_factory import create_crawler, get_available_crawlers
+from utils.concurrent_manager import ConcurrentCrawlerManager
+from utils.websocket_server import WebSocketManager
 
 
-def load_config(config_path: str = None) -> dict:
-    """Load configuration from YAML file."""
-    if config_path is None:
-        config_path = os.getenv('CONFIG_PATH', '/app/config/config.yaml')
-    
-    with open(config_path, 'r') as f:
-        config = yaml.safe_load(f)
-    
-    return config
+def load_config_wrapper():
+    """Load configuration from YAML and environment variables."""
+    return load_config()
 
 
-def run_sitemap_analysis(config: dict):
-    """Run sitemap analysis based on configuration."""
-    sitemap_config = config.get('sitemap', {})
-    urls = sitemap_config.get('urls', [])
+def list_available_crawlers():
+    """Print list of available crawler types."""
+    crawlers = get_available_crawlers()
+    print("\nAvailable Crawler Types:")
+    print("-" * 60)
     
-    if not urls:
-        print("No sitemap URLs configured.")
-        return
+    descriptions = {
+        'local_seo': 'Local SEO - NAP consistency, LocalBusiness schema, Google Maps',
+        'general_seo': 'General SEO - Meta tags, canonical URLs, structured data',
+        'blogging': 'Blogging - Article schema, authors, categories, tags',
+        'ecommerce': 'E-commerce - Product schema, pricing, inventory, reviews',
+        'news_media': 'News/Media - NewsArticle schema, AMP, publication metadata',
+        'technical_seo': 'Technical SEO - Core Web Vitals, performance, mobile-friendliness',
+        'competitor': 'Competitor Analysis - Multi-site comparison and benchmarking',
+    }
     
-    print(f"Analyzing sitemaps: {urls}")
-    sitemap_df = adv.sitemap_to_df(
-        sitemap_config['urls'],
-        recursive=sitemap_config.get('recursive', True)
-    )
-    
-    output_file = sitemap_config.get('output_file', '/app/output/sitemap_data.jl')
-    sitemap_df.to_json(output_file, orient='records', lines=True)
-    print(f"Sitemap data saved to: {output_file}")
-    print(f"Total URLs found: {len(sitemap_df)}")
+    for crawler_type in crawlers:
+        description = descriptions.get(crawler_type, 'N/A')
+        print(f"  • {crawler_type:<20} - {description}")
+    print()
 
 
-def run_crawler(config: dict):
-    """Run website crawler based on configuration."""
-    crawl_config = config.get('crawl', {})
-    start_urls = crawl_config.get('start_urls', [])
+def create_and_run_crawler(crawler_type: str, start_urls: list, config: dict = None):
+    """
+    Create and run a specific crawler type.
     
-    if not start_urls:
-        print("No start URLs configured for crawling.")
-        return
+    Args:
+        crawler_type: Type of crawler to create ('local_seo', 'general_seo', etc.)
+        start_urls: List of URLs to crawl
+        config: Configuration dictionary (if None, loads from file)
     
-    output_file = crawl_config.get('output_file', '/app/output/crawl_output.jl')
+    Returns:
+        Tuple of (crawl_data, report)
+    """
+    if config is None:
+        config = load_config_wrapper()
     
+    print(f"\n{'='*60}")
+    print(f"Creating {crawler_type} crawler...")
+    print(f"{'='*60}\n")
+    
+    # Create crawler instance
+    crawler = create_crawler(crawler_type, config)
+    
+    # Run crawl
     print(f"Starting crawl from: {start_urls}")
+    crawl_data = crawler.crawl(start_urls)
     
-    # Prepare custom settings
-    custom_settings = crawl_config.get('custom_settings', {})
+    print(f"✓ Crawl complete! Found {len(crawl_data)} pages.\n")
     
-    adv.crawl(
-        url_list=start_urls,
-        output_file=output_file,
-        follow_links=crawl_config.get('follow_links', True),
-        css_selectors=crawl_config.get('css_selectors', []),
-        xpath_selectors=crawl_config.get('xpath_selectors', []),
-        custom_settings=custom_settings
-    )
+    # Generate report
+    print("Generating analysis report...")
+    report = crawler.generate_report(include_analysis=True)
+    crawler.save_report(report)
     
-    print(f"Crawl completed. Output saved to: {output_file}")
+    # Export data
+    print("Exporting data to multiple formats...")
+    exports = crawler.export_all_formats(include_analysis=True)
+    
+    for fmt, file_path in exports.items():
+        print(f"  ✓ {fmt.upper()}: {file_path}")
+    
+    return crawl_data, report
 
 
 def main():
-    """Main entry point for the crawler."""
-    print("=" * 60)
-    print("Advertools SEO Crawler")
-    print("=" * 60)
+    """Main entry point for interactive use."""
+    config = load_config_wrapper()
     
-    # Load configuration
-    config = load_config()
+    print("\n" + "="*60)
+    print("Advertools SEO Crawler System")
+    print("="*60)
     
-    # Create output directory if it doesn't exist
-    Path("/app/output").mkdir(parents=True, exist_ok=True)
+    list_available_crawlers()
     
-    # You can uncomment the function you want to run
-    # run_sitemap_analysis(config)
-    # run_crawler(config)
-    
-    print("\nCrawler script loaded. Available functions:")
-    print("  - run_sitemap_analysis(config)")
-    print("  - run_crawler(config)")
-    print("\nUse Python interactive mode to run specific functions.")
-    print("Example: docker-compose exec advertools python -i crawler.py")
+    print("Available Functions:")
+    print("-" * 60)
+    print("  create_and_run_crawler(crawler_type, start_urls, config=None)")
+    print("    Run a single crawler and generate all reports")
+    print()
+    print("  create_crawler(crawler_type, config)")
+    print("    Create crawler instance for manual control")
+    print()
+    print("  ConcurrentCrawlerManager(max_concurrent=3)")
+    print("    Run multiple crawlers simultaneously")
+    print()
+    print("  load_config_wrapper()")
+    print("    Load configuration from YAML and environment")
+    print()
+    print("Command Line Usage:")
+    print("-" * 60)
+    print("  python cli.py crawl --crawler-type general_seo --url https://example.com")
+    print("  python cli.py crawl --crawler-type technical_seo --url https://example.com --measure-vitals")
+    print("  python cli.py list-crawlers")
+    print("  python cli.py cleanup --dry-run")
+    print("  python cli.py stats")
+    print()
+    print("Starting interactive shell. Use Ctrl+D or exit() to quit.")
+    print("="*60 + "\n")
 
 
 if __name__ == "__main__":
     main()
+    
+    # Start interactive Python shell
+    import code
+    code.interact(local=globals())
+

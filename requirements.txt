@@ -1,8 +1,29 @@
 # Core dependencies
 advertools>=0.16.0
 
-# Additional useful packages
+# Configuration and environment
 pyyaml>=6.0
 python-dotenv>=1.0.0
+
+# Data processing
 pandas>=2.0.0
+numpy>=1.24.0
+
+# Network and HTTP
 requests>=2.31.0
+
+# Browser automation and performance testing
+playwright>=1.40.0
+
+# AWS S3 support (optional)
+boto3>=1.28.0
+
+# Real-time monitoring
+websockets>=11.0
+
+# CLI interface
+click>=8.1.0
+typer>=0.9.0
+
+# Additional utilities
+python-dateutil>=2.8.0
