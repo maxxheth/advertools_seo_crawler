@@ -1,8 +1,16 @@
 import React, { useState, useEffect } from 'react';
 
+type LiveEvent = {
+  type?: string;
+  event?: string;
+  message?: string;
+  data?: unknown;
+  [key: string]: unknown;
+};
+
 function LiveCrawlMonitor() {
-  const [events, setEvents] = useState([]);
-  const [isConnected, setIsConnected] = useState(false);
+  const [events, setEvents] = useState<LiveEvent[]>([]);
+  const [isConnected, setIsConnected] = useState<boolean>(false);
 
   useEffect(() => {
     const wsUrl = process.env.WEBSOCKET_URL || 'ws://localhost:8765';
@@ -16,7 +24,7 @@ function LiveCrawlMonitor() {
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        addEvent(data);
+        addEvent(data as LiveEvent);
       } catch (error) {
         console.error('Error parsing WebSocket message:', error);
       }
@@ -37,8 +45,8 @@ function LiveCrawlMonitor() {
     };
   }, []);
 
-  const addEvent = (event) => {
-    setEvents(prev => [event, ...prev].slice(0, 50)); // Keep last 50 events
+  const addEvent = (event: LiveEvent) => {
+    setEvents(prev => ([event, ...prev].slice(0, 50)));
   };
 
   return (

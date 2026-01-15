@@ -27,34 +27,34 @@ class CompetitorCrawler(BaseCrawler):
         """
         self.competitors = competitors
 
-    def get_css_selectors(self) -> List[str]:
+    def get_css_selectors(self) -> Dict[str, str]:
         """Return CSS selectors for competitor analysis."""
-        return [
-            'title',
-            'meta[name="description"]',
-            'h1',
-            'h2',
-            'h3',
-            '[itemscope]',
-            'a[href]',
-            'img[alt]',
-            '.keyword',
-            '[itemprop="keyword"]',
-            'script[type="application/ld+json"]',
-            'meta[property^="og:"]',
-            '.product',
-            '.service',
-        ]
+        return {
+            'title': 'title',
+            'description': 'meta[name="description"]',
+            'h1': 'h1',
+            'h2': 'h2',
+            'h3': 'h3',
+            'structured_data': '[itemscope]',
+            'links': 'a[href]',
+            'images': 'img[alt]',
+            'keyword_class': '.keyword',
+            'keyword_prop': '[itemprop="keyword"]',
+            'json_ld': 'script[type="application/ld+json"]',
+            'og_tags': 'meta[property^="og:"]',
+            'products': '.product',
+            'services': '.service',
+        }
 
-    def get_xpath_selectors(self) -> List[str]:
+    def get_xpath_selectors(self) -> Dict[str, str]:
         """Return XPath selectors for competitor analysis."""
-        return [
-            '//title/text()',
-            '//meta[@name="description"]/@content',
-            '//h1/text()',
-            '//h2/text()',
-            '//a/@href',
-        ]
+        return {
+            'title': '//title/text()',
+            'description': '//meta[@name="description"]/@content',
+            'h1': '//h1/text()',
+            'h2': '//h2/text()',
+            'links': '//a/@href',
+        }
 
     def validate_results(self, df: pd.DataFrame) -> Dict[str, Any]:
         """

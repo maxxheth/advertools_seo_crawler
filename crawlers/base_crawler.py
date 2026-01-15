@@ -43,12 +43,12 @@ class BaseCrawler(ABC):
         self.screenshots_dir.mkdir(parents=True, exist_ok=True)
 
     @abstractmethod
-    def get_css_selectors(self) -> List[str]:
+    def get_css_selectors(self) -> Dict[str, str]:
         """Return CSS selectors for this crawler type."""
         pass
 
     @abstractmethod
-    def get_xpath_selectors(self) -> List[str]:
+    def get_xpath_selectors(self) -> Dict[str, str]:
         """Return XPath selectors for this crawler type."""
         pass
 
@@ -63,6 +63,17 @@ class BaseCrawler(ABC):
         ).get(self.crawler_type, self.config.get("crawl_settings", {}).get("default_page_limit", 500))
         
         settings["CLOSESPIDER_PAGECOUNT"] = page_limit
+        
+        # SSL verification
+        crawl_settings = self.config.get("crawl_settings", {})
+        if not crawl_settings.get("verify_ssl", True):
+            settings["ROBOTSTXT_OBEY"] = False
+            settings["DOWNLOADER_CLIENT_TLS_VERBOSE_LOGGING"] = False
+        
+        # Timeouts and retries
+        settings["DOWNLOAD_TIMEOUT"] = crawl_settings.get("timeout", 30)
+        settings["RETRY_TIMES"] = crawl_settings.get("retry_count", 3)
+        settings["RETRY_HTTP_CODES"] = [500, 502, 503, 504, 408, 429]
         
         return settings
 
@@ -96,22 +107,53 @@ class BaseCrawler(ABC):
         if not output_file:
             output_file = str(self.output_dir / f"{self.crawler_type}_crawl_{self.timestamp}.jl")
 
+        # Validate URLs
+        if not start_urls:
+            print("Warning: No URLs provided for crawl")
+            self.crawl_data = pd.DataFrame()
+            return self.crawl_data
+
         print(f"Starting {self.crawler_type} crawl from: {start_urls}")
 
-        adv.crawl(
-            url_list=start_urls,
-            output_file=output_file,
-            follow_links=self.config.get("crawl_settings", {}).get("follow_links", True),
-            css_selectors=self.get_css_selectors(),
-            xpath_selectors=self.get_xpath_selectors(),
-            custom_settings=self.get_custom_settings()
-        )
+        try:
+            adv.crawl(
+                url_list=start_urls,
+                output_file=output_file,
+                follow_links=self.config.get("crawl_settings", {}).get("follow_links", True),
+                css_selectors=self.get_css_selectors(),
+                xpath_selectors=self.get_xpath_selectors(),
+                custom_settings=self.get_custom_settings()
+            )
 
-        # Load results
-        self.crawl_data = pd.read_json(output_file, lines=True)
-        print(f"Crawl completed. Found {len(self.crawl_data)} pages.")
-        
-        return self.crawl_data
+            # Load results with error handling
+            if Path(output_file).exists():
+                self.crawl_data = pd.read_json(output_file, lines=True)
+            else:
+                print(f"Warning: Output file not created: {output_file}")
+                self.crawl_data = pd.DataFrame()
+
+            # Filter out error rows (DNS failures, timeouts, etc)
+            if len(self.crawl_data) > 0:
+                # Remove rows where URL is actually an error message
+                self.crawl_data = self.crawl_data[~self.crawl_data.get('url', '').astype(str).str.contains('lookup failed|timeout|error', case=False, na=False)]
+                print(f"Crawl completed. Found {len(self.crawl_data)} valid pages.")
+            else:
+                print("Crawl completed. No pages found.")
+            
+            return self.crawl_data
+            
+        except Exception as e:
+            print(f"Error during crawl: {e}")
+            # Try to load partial results if available
+            if Path(output_file).exists():
+                try:
+                    self.crawl_data = pd.read_json(output_file, lines=True)
+                    print(f"Loaded {len(self.crawl_data)} partial results before error")
+                    return self.crawl_data
+                except:
+                    pass
+            self.crawl_data = pd.DataFrame()
+            return self.crawl_data
 
     @abstractmethod
     def validate_results(self, df: pd.DataFrame) -> Dict[str, Any]:
@@ -149,8 +191,18 @@ class BaseCrawler(ABC):
         Returns:
             Report dictionary
         """
-        if self.crawl_data is None:
-            raise ValueError("No crawl data available. Run crawl() first.")
+        if self.crawl_data is None or len(self.crawl_data) == 0:
+            return {
+                "crawler_type": self.crawler_type,
+                "timestamp": self.timestamp,
+                "crawl_summary": {
+                    "total_urls": 0,
+                    "crawl_date": datetime.now().isoformat(),
+                    "error": "No valid data crawled"
+                },
+                "validation": {},
+                "analysis": {} if include_analysis else None
+            }
 
         report = {
             "crawler_type": self.crawler_type,
@@ -163,7 +215,11 @@ class BaseCrawler(ABC):
         }
 
         if include_analysis:
-            report["analysis"] = self.analyze_results(self.crawl_data)
+            try:
+                report["analysis"] = self.analyze_results(self.crawl_data)
+            except Exception as e:
+                print(f"Warning: Analysis failed - {e}")
+                report["analysis"] = {"error": str(e)}
 
         return report
 

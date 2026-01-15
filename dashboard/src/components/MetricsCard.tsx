@@ -1,11 +1,16 @@
 import React from 'react';
 
-function MetricsCard({ title, value }) {
-  const formatValue = (val) => {
+interface MetricsCardProps {
+  title: string;
+  value: number | string;
+}
+
+function MetricsCard({ title, value }: MetricsCardProps): JSX.Element {
+  const formatValue = (val: number | string): string => {
     if (typeof val === 'number') {
       return val.toFixed(2);
     }
-    return val;
+    return String(val);
   };
 
   return (

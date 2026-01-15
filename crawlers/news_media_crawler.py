@@ -15,42 +15,42 @@ class NewsMediaCrawler(BaseCrawler):
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config, crawler_type="news_media")
 
-    def get_css_selectors(self) -> List[str]:
+    def get_css_selectors(self) -> Dict[str, str]:
         """Return CSS selectors for news/media elements."""
-        return [
-            '[itemtype*="NewsArticle"]',
-            '[itemtype*="ReportageNewsArticle"]',
-            '[itemtype*="Article"]',
-            'link[rel="amphtml"]',
-            '.byline',
-            '.author-name',
-            '[itemprop="author"]',
-            'time[datetime]',
-            '.article-date',
-            '[itemprop="datePublished"]',
-            '[itemprop="dateModified"]',
-            '.article-section',
-            '.category',
-            '[itemprop="articleSection"]',
-            'video',
-            '.video-player',
-            '.image-gallery',
-            '.source',
-            '.attribution',
-            '[itemprop="headline"]',
-            '[itemprop="description"]',
-        ]
+        return {
+            'news_article': '[itemtype*="NewsArticle"]',
+            'reportage_article': '[itemtype*="ReportageNewsArticle"]',
+            'article': '[itemtype*="Article"]',
+            'amphtml': 'link[rel="amphtml"]',
+            'byline': '.byline',
+            'author_name': '.author-name',
+            'author_prop': '[itemprop="author"]',
+            'time_datetime': 'time[datetime]',
+            'article_date': '.article-date',
+            'date_published': '[itemprop="datePublished"]',
+            'date_modified': '[itemprop="dateModified"]',
+            'section_class': '.article-section',
+            'category': '.category',
+            'section_prop': '[itemprop="articleSection"]',
+            'video': 'video',
+            'video_player': '.video-player',
+            'image_gallery': '.image-gallery',
+            'source': '.source',
+            'attribution': '.attribution',
+            'headline': '[itemprop="headline"]',
+            'description': '[itemprop="description"]',
+        }
 
-    def get_xpath_selectors(self) -> List[str]:
+    def get_xpath_selectors(self) -> Dict[str, str]:
         """Return XPath selectors for news/media elements."""
-        return [
-            '//link[@rel="amphtml"]/@href',
-            '//span[@itemprop="author"]',
-            '//time[@datetime]/@datetime',
-            '//span[@itemprop="datePublished"]',
-            '//span[@itemprop="articleSection"]',
-            '//h1[@itemprop="headline"]',
-        ]
+        return {
+            'amphtml_href': '//link[@rel="amphtml"]/@href',
+            'author': '//span[@itemprop="author"]',
+            'datetime': '//time[@datetime]/@datetime',
+            'date_published': '//span[@itemprop="datePublished"]',
+            'section': '//span[@itemprop="articleSection"]',
+            'headline': '//h1[@itemprop="headline"]',
+        }
 
     def validate_results(self, df: pd.DataFrame) -> Dict[str, Any]:
         """

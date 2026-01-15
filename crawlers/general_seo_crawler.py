@@ -15,35 +15,35 @@ class GeneralSEOCrawler(BaseCrawler):
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config, crawler_type="general_seo")
 
-    def get_css_selectors(self) -> List[str]:
+    def get_css_selectors(self) -> Dict[str, str]:
         """Return CSS selectors for general SEO elements."""
-        return [
-            'link[rel="canonical"]',
-            'link[rel="alternate"]',
-            'meta[name="robots"]',
-            'meta[name="description"]',
-            'meta[property^="og:"]',
-            'meta[name^="twitter:"]',
-            '[itemscope]',
-            'script[type="application/ld+json"]',
-            'h1',
-            'h2',
-            'h3',
-            'img[alt]',
-            'a[rel="nofollow"]',
-            'a[rel="sponsored"]',
-        ]
+        return {
+            'canonical': 'link[rel="canonical"]',
+            'alternate': 'link[rel="alternate"]',
+            'robots': 'meta[name="robots"]',
+            'description': 'meta[name="description"]',
+            'og_tags': 'meta[property^="og:"]',
+            'twitter_tags': 'meta[name^="twitter:"]',
+            'structured_data': '[itemscope]',
+            'json_ld': 'script[type="application/ld+json"]',
+            'h1': 'h1',
+            'h2': 'h2',
+            'h3': 'h3',
+            'img_alt': 'img[alt]',
+            'nofollow': 'a[rel="nofollow"]',
+            'sponsored': 'a[rel="sponsored"]',
+        }
 
-    def get_xpath_selectors(self) -> List[str]:
+    def get_xpath_selectors(self) -> Dict[str, str]:
         """Return XPath selectors for general SEO elements."""
-        return [
-            '//link[@rel="canonical"]/@href',
-            '//meta[@name="description"]/@content',
-            '//meta[@name="robots"]/@content',
-            '//h1/text()',
-            '//h2/text()',
-            '//title/text()',
-        ]
+        return {
+            'canonical_href': '//link[@rel="canonical"]/@href',
+            'description_content': '//meta[@name="description"]/@content',
+            'robots_content': '//meta[@name="robots"]/@content',
+            'h1_text': '//h1/text()',
+            'h2_text': '//h2/text()',
+            'title': '//title/text()',
+        }
 
     def validate_results(self, df: pd.DataFrame) -> Dict[str, Any]:
         """

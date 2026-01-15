@@ -15,39 +15,39 @@ class LocalSEOCrawler(BaseCrawler):
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config, crawler_type="local_seo")
 
-    def get_css_selectors(self) -> List[str]:
+    def get_css_selectors(self) -> Dict[str, str]:
         """Return CSS selectors for local SEO elements."""
-        return [
-            '[itemtype*="LocalBusiness"]',
-            '[itemtype*="Restaurant"]',
-            '[itemtype*="Store"]',
-            '[itemtype*="Organization"]',
-            '.address',
-            '.phone',
-            '.email',
-            '[itemprop="address"]',
-            '[itemprop="telephone"]',
-            '[itemprop="email"]',
-            'iframe[src*="google.com/maps"]',
-            '[itemprop="aggregateRating"]',
-            '[itemprop="review"]',
-            '[itemprop="openingHours"]',
-            '[itemprop="areaServed"]',
-            '.local-business',
-            '.nap-info',
-        ]
+        return {
+            'local_business_schema': '[itemtype*="LocalBusiness"]',
+            'restaurant_schema': '[itemtype*="Restaurant"]',
+            'store_schema': '[itemtype*="Store"]',
+            'organization_schema': '[itemtype*="Organization"]',
+            'address_class': '.address',
+            'phone_class': '.phone',
+            'email_class': '.email',
+            'address_prop': '[itemprop="address"]',
+            'telephone_prop': '[itemprop="telephone"]',
+            'email_prop': '[itemprop="email"]',
+            'google_maps': 'iframe[src*="google.com/maps"]',
+            'aggregate_rating': '[itemprop="aggregateRating"]',
+            'review': '[itemprop="review"]',
+            'opening_hours': '[itemprop="openingHours"]',
+            'area_served': '[itemprop="areaServed"]',
+            'local_business_div': '.local-business',
+            'nap_info': '.nap-info',
+        }
 
-    def get_xpath_selectors(self) -> List[str]:
+    def get_xpath_selectors(self) -> Dict[str, str]:
         """Return XPath selectors for local SEO elements."""
-        return [
-            '//span[@itemprop="addressLocality"]',
-            '//span[@itemprop="addressRegion"]',
-            '//span[@itemprop="postalCode"]',
-            '//span[@itemprop="streetAddress"]',
-            '//span[@itemprop="telephone"]',
-            '//span[@itemprop="email"]',
-            '//span[@itemprop="name"]',
-        ]
+        return {
+            'address_locality': '//span[@itemprop="addressLocality"]',
+            'address_region': '//span[@itemprop="addressRegion"]',
+            'postal_code': '//span[@itemprop="postalCode"]',
+            'street_address': '//span[@itemprop="streetAddress"]',
+            'telephone': '//span[@itemprop="telephone"]',
+            'email': '//span[@itemprop="email"]',
+            'name': '//span[@itemprop="name"]',
+        }
 
     def validate_results(self, df: pd.DataFrame) -> Dict[str, Any]:
         """
@@ -72,31 +72,34 @@ class LocalSEOCrawler(BaseCrawler):
 
         for _, row in df.iterrows():
             # Check for LocalBusiness schema
-            if "itemtype" in row and "localbusiness" in str(row.get("itemtype", "")).lower():
+            if 'local_business_schema' in row and row['local_business_schema']:
                 validation["has_local_business_schema"] += 1
 
             # Check for NAP data
-            if row.get("address") or row.get("telephone") or row.get("email"):
+            if (('address_prop' in row and row['address_prop']) or 
+                ('telephone_prop' in row and row['telephone_prop']) or 
+                ('email_prop' in row and row['email_prop'])):
                 validation["has_nap_data"] += 1
 
             # Check for Google Maps
-            if "google.com/maps" in str(row.get("iframe[src*='google.com/maps']", "")):
+            if 'google_maps' in row and row['google_maps']:
                 validation["has_google_maps"] += 1
 
             # Check for reviews
-            if row.get("aggregateRating") or row.get("review"):
+            if (('aggregate_rating' in row and row['aggregate_rating']) or 
+                ('review' in row and row['review'])):
                 validation["has_reviews"] += 1
 
             # Check for opening hours
-            if row.get("openingHours"):
+            if 'opening_hours' in row and row['opening_hours']:
                 validation["has_opening_hours"] += 1
 
             # Count NAP elements
-            if row.get("address"):
+            if 'address_prop' in row and row['address_prop']:
                 validation["pages_with_address"] += 1
-            if row.get("telephone"):
+            if 'telephone_prop' in row and row['telephone_prop']:
                 validation["pages_with_phone"] += 1
-            if row.get("email"):
+            if 'email_prop' in row and row['email_prop']:
                 validation["pages_with_email"] += 1
 
         return validation
@@ -111,18 +114,53 @@ class LocalSEOCrawler(BaseCrawler):
         Returns:
             Dictionary with analysis results
         """
+        # Safe column access helpers
+        def safe_contains(df, col, pattern):
+            if col not in df or df[col].dtype == 'object':
+                return pd.Series(False, index=df.index)
+            try:
+                return df[col].astype(str).str.contains(pattern, case=False, na=False)
+            except:
+                return pd.Series(False, index=df.index)
+
         analysis = {
             "nap_consistency_score": 0.0,
-            "local_business_coverage": f"{(len(df[df.get('itemtype', '').str.contains('LocalBusiness', case=False, na=False)]) / len(df) * 100):.1f}%",
-            "review_pages": len(df[df.get("aggregateRating").notna()]),
-            "pages_with_maps": len(df[df.get('iframe[src*="google.com/maps"]').notna()]),
-            "average_rating": df.get("aggregateRating", {}).mean() if "aggregateRating" in df else None,
-            "local_keywords_found": len(df[df.get('title', '').str.contains('near|local|in |at ', case=False, na=False)]),
+            "local_business_coverage": "0%",
+            "review_pages": 0,
+            "pages_with_maps": 0,
+            "average_rating": None,
+            "local_keywords_found": 0,
         }
 
+        if len(df) == 0:
+            return analysis
+
+        # Count local business schema
+        local_biz = safe_contains(df, 'local_business_schema', 'LocalBusiness')
+        analysis["local_business_coverage"] = f"{(local_biz.sum() / len(df) * 100):.1f}%"
+
+        # Count review pages
+        if 'review' in df:
+            analysis["review_pages"] = df['review'].notna().sum()
+
+        # Count pages with maps
+        if 'google_maps' in df:
+            analysis["pages_with_maps"] = df['google_maps'].notna().sum()
+
+        # Average rating
+        if 'aggregate_rating' in df:
+            ratings = pd.to_numeric(df['aggregate_rating'], errors='coerce')
+            if ratings.notna().sum() > 0:
+                analysis["average_rating"] = float(ratings.mean())
+
+        # Local keywords in title
+        if 'title' in df:
+            local_kw = safe_contains(df, 'title', r'near|local|in|at')
+            analysis["local_keywords_found"] = local_kw.sum()
+
         # Calculate NAP consistency
-        nap_fields = ["address", "telephone", "email"]
+        nap_fields = ["address_prop", "telephone_prop", "email_prop"]
         nap_present = sum(1 for field in nap_fields if field in df and df[field].notna().sum() > 0)
-        analysis["nap_consistency_score"] = (nap_present / len(nap_fields)) * 100
+        analysis["nap_consistency_score"] = (nap_present / 3) * 100
 
         return analysis

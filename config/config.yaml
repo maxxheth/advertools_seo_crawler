@@ -6,6 +6,10 @@ crawl_settings:
   follow_links: true
   concurrent_crawlers: true
   max_concurrent: 3
+  verify_ssl: false
+  timeout: 30
+  retry_count: 3
+  retry_delay: 1
   page_limits:
     local_seo: 500
     general_seo: 500

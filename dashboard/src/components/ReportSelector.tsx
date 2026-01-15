@@ -1,6 +1,20 @@
 import React, { useState } from 'react';
 
-function ReportSelector({ reports, selectedReport, onReportSelect, onRefresh }) {
+export interface Report {
+  id: string | number;
+  crawler_type: string;
+  timestamp?: string;
+  [key: string]: any;
+}
+
+interface ReportSelectorProps {
+  reports: Report[];
+  selectedReport?: Report | null;
+  onReportSelect: (report: Report) => void;
+  onRefresh: () => void;
+}
+
+function ReportSelector({ reports, selectedReport, onReportSelect, onRefresh }: ReportSelectorProps) {
   const [filter, setFilter] = useState('all');
 
   const filteredReports = filter === 'all' 

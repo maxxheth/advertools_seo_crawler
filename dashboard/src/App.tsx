@@ -1,13 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import ReportSelector from './components/ReportSelector';
+import { useState, useEffect } from 'react';
+import ReportSelector, { Report } from './components/ReportSelector';
 import LiveCrawlMonitor from './components/LiveCrawlMonitor';
 import MetricsCard from './components/MetricsCard';
 
 import './index.css';
 
+type DashboardReport = Report & {
+  metrics?: Record<string, number | string>;
+};
+
 function App() {
-  const [selectedReport, setSelectedReport] = useState(null);
-  const [reports, setReports] = useState([]);
+  const [selectedReport, setSelectedReport] = useState<DashboardReport | null>(null);
+  const [reports, setReports] = useState<DashboardReport[]>([]);
   const [monitoring, setMonitoring] = useState(false);
 
   useEffect(() => {
@@ -15,7 +19,7 @@ function App() {
     loadReports();
 
     // Setup WebSocket if watch mode is enabled
-    const wsUrl = process.env.WEBSOCKET_URL || 'ws://localhost:8765';
+    const wsUrl = import.meta.env.VITE_WEBSOCKET_URL || 'ws://localhost:8765';
     try {
       const ws = new WebSocket(wsUrl);
       
@@ -47,7 +51,7 @@ function App() {
     try {
       const response = await fetch('/api/reports');
       const data = await response.json();
-      setReports(data);
+      setReports(data as DashboardReport[]);
     } catch (error) {
       console.log('Could not load reports:', error);
     }
@@ -77,18 +81,26 @@ function App() {
           <ReportSelector 
             reports={reports}
             selectedReport={selectedReport}
-            onReportSelect={setSelectedReport}
+            onReportSelect={(report) => setSelectedReport(report as DashboardReport)}
             onRefresh={loadReports}
           />
         </div>
 
         {/* Metrics Grid */}
         {selectedReport ? (
+          (() => {
+            const metricEntries = Object.entries(
+              (selectedReport.metrics ?? {}) as Record<string, number | string>
+            );
+
+            return (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {Object.entries(selectedReport.metrics || {}).map(([key, value]) => (
+            {metricEntries.map(([key, value]) => (
               <MetricsCard key={key} title={key} value={value} />
             ))}
           </div>
+            );
+          })()
         ) : (
           <div className="text-center text-gray-500 py-12">
             <p>Select a report to view metrics</p>

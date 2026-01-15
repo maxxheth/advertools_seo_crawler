@@ -45,7 +45,7 @@ services:
       - ./screenshots:/app/screenshots
     environment:
       - DASHBOARD_MODE=development
-      - WEBSOCKET_URL=ws://localhost:8765
+      - VITE_WEBSOCKET_URL=ws://localhost:8765
       - AUTO_REFRESH_INTERVAL=30
     working_dir: /app/dashboard
     command: bun run dev
@@ -69,6 +69,7 @@ services:
       - ./dashboard/dist:/usr/share/nginx/html
     environment:
       - DASHBOARD_MODE=production
+      - VITE_WEBSOCKET_URL=ws://advertools:8765
     working_dir: /app/dashboard
     networks:
       - advertools_network

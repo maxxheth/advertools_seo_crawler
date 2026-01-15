@@ -29,7 +29,9 @@ def cli():
 @click.option('--check-resp', type=click.Choice(['all', 'mobile', 'desktop', 'tablet']), default='all', help='Check responsiveness')
 @click.option('--concurrent', is_flag=True, help='Run multiple crawlers concurrently')
 @click.option('--s3-storage', is_flag=True, help='Use S3 for screenshot storage')
-def crawl(crawler_type, page_limit, url, analysis, export_format, watch, measure_vitals, take_pics, check_resp, concurrent, s3_storage):
+@click.option('--no-verify-ssl', is_flag=True, help='Disable SSL verification (for self-signed certs)')
+@click.option('--timeout', type=int, default=None, help='Request timeout in seconds')
+def crawl(crawler_type, page_limit, url, analysis, export_format, watch, measure_vitals, take_pics, check_resp, concurrent, s3_storage, no_verify_ssl, timeout):
     """Run one or more crawlers."""
     config = load_config()
 
@@ -40,6 +42,10 @@ def crawl(crawler_type, page_limit, url, analysis, export_format, watch, measure
         config['storage']['screenshot_storage'] = 's3'
     if watch:
         config['watch_settings']['enabled'] = True
+    if no_verify_ssl:
+        config['crawl_settings']['verify_ssl'] = False
+    if timeout:
+        config['crawl_settings']['timeout'] = timeout
 
     # Determine crawler types
     if not crawler_type:

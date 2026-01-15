@@ -15,47 +15,47 @@ class BloggingCrawler(BaseCrawler):
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config, crawler_type="blogging")
 
-    def get_css_selectors(self) -> List[str]:
+    def get_css_selectors(self) -> Dict[str, str]:
         """Return CSS selectors for blogging elements."""
-        return [
-            '[itemtype*="Article"]',
-            '[itemtype*="BlogPosting"]',
-            '[itemtype*="NewsArticle"]',
-            '.author',
-            '.byline',
-            '[rel="author"]',
-            '[itemprop="author"]',
-            'time[datetime]',
-            '.published-date',
-            '.modified-date',
-            '[itemprop="datePublished"]',
-            '[itemprop="dateModified"]',
-            '.category',
-            '.tag',
-            '[rel="category"]',
-            '[rel="tag"]',
-            '.social-share',
-            '.share-button',
-            '.related-posts',
-            '.recommended',
-            '.comment-count',
-            '#comments',
-            '.reading-time',
-            '[itemprop="headline"]',
-            '[itemprop="articleBody"]',
-        ]
+        return {
+            'article_schema': '[itemtype*="Article"]',
+            'blog_posting': '[itemtype*="BlogPosting"]',
+            'news_article': '[itemtype*="NewsArticle"]',
+            'author_class': '.author',
+            'byline': '.byline',
+            'author_rel': '[rel="author"]',
+            'author_prop': '[itemprop="author"]',
+            'time_datetime': 'time[datetime]',
+            'published_date': '.published-date',
+            'modified_date': '.modified-date',
+            'date_published_prop': '[itemprop="datePublished"]',
+            'date_modified_prop': '[itemprop="dateModified"]',
+            'category': '.category',
+            'tag': '.tag',
+            'category_rel': '[rel="category"]',
+            'tag_rel': '[rel="tag"]',
+            'social_share': '.social-share',
+            'share_button': '.share-button',
+            'related_posts': '.related-posts',
+            'recommended': '.recommended',
+            'comment_count': '.comment-count',
+            'comments': '#comments',
+            'reading_time': '.reading-time',
+            'headline_prop': '[itemprop="headline"]',
+            'article_body_prop': '[itemprop="articleBody"]',
+        }
 
-    def get_xpath_selectors(self) -> List[str]:
+    def get_xpath_selectors(self) -> Dict[str, str]:
         """Return XPath selectors for blogging elements."""
-        return [
-            '//span[@itemprop="author"]',
-            '//time[@datetime]/@datetime',
-            '//span[@itemprop="datePublished"]/@content',
-            '//span[@itemprop="dateModified"]/@content',
-            '//span[@class="category"]',
-            '//span[@class="tag"]',
-            '//div[@itemprop="articleBody"]',
-        ]
+        return {
+            'author': '//span[@itemprop="author"]',
+            'datetime': '//time[@datetime]/@datetime',
+            'date_published': '//span[@itemprop="datePublished"]/@content',
+            'date_modified': '//span[@itemprop="dateModified"]/@content',
+            'category': '//span[@class="category"]',
+            'tag': '//span[@class="tag"]',
+            'article_body': '//div[@itemprop="articleBody"]',
+        }
 
     def validate_results(self, df: pd.DataFrame) -> Dict[str, Any]:
         """

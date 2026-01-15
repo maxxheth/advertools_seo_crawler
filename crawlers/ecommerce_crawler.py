@@ -15,42 +15,42 @@ class EcommerceCrawler(BaseCrawler):
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config, crawler_type="ecommerce")
 
-    def get_css_selectors(self) -> List[str]:
+    def get_css_selectors(self) -> Dict[str, str]:
         """Return CSS selectors for e-commerce elements."""
-        return [
-            '[itemtype*="Product"]',
-            '[itemprop="offers"]',
-            '[itemprop="price"]',
-            '[itemprop="priceCurrency"]',
-            '[itemprop="availability"]',
-            '[itemprop="sku"]',
-            '[itemprop="productID"]',
-            '.breadcrumb',
-            '[itemtype*="BreadcrumbList"]',
-            '[itemprop="review"]',
-            '[itemprop="aggregateRating"]',
-            '.product-rating',
-            '.star-rating',
-            '.add-to-cart',
-            '.buy-now',
-            '.product-image',
-            '.product-gallery',
-            '[itemprop="image"]',
-            '.product-variant',
-            '.product-option',
-        ]
+        return {
+            'product_schema': '[itemtype*="Product"]',
+            'offers': '[itemprop="offers"]',
+            'price': '[itemprop="price"]',
+            'currency': '[itemprop="priceCurrency"]',
+            'availability': '[itemprop="availability"]',
+            'sku': '[itemprop="sku"]',
+            'product_id': '[itemprop="productID"]',
+            'breadcrumb_class': '.breadcrumb',
+            'breadcrumb_schema': '[itemtype*="BreadcrumbList"]',
+            'review': '[itemprop="review"]',
+            'aggregate_rating': '[itemprop="aggregateRating"]',
+            'rating_class': '.product-rating',
+            'star_rating': '.star-rating',
+            'add_to_cart': '.add-to-cart',
+            'buy_now': '.buy-now',
+            'product_image': '.product-image',
+            'gallery': '.product-gallery',
+            'image_prop': '[itemprop="image"]',
+            'variant': '.product-variant',
+            'option': '.product-option',
+        }
 
-    def get_xpath_selectors(self) -> List[str]:
+    def get_xpath_selectors(self) -> Dict[str, str]:
         """Return XPath selectors for e-commerce elements."""
-        return [
-            '//span[@itemprop="price"]',
-            '//span[@itemprop="priceCurrency"]',
-            '//span[@itemprop="availability"]',
-            '//span[@itemprop="sku"]',
-            '//span[@itemprop="aggregateRating"]',
-            '//span[@itemprop="ratingValue"]',
-            '//link[@itemtype="BreadcrumbList"]',
-        ]
+        return {
+            'price': '//span[@itemprop="price"]',
+            'currency': '//span[@itemprop="priceCurrency"]',
+            'availability': '//span[@itemprop="availability"]',
+            'sku': '//span[@itemprop="sku"]',
+            'rating': '//span[@itemprop="aggregateRating"]',
+            'rating_value': '//span[@itemprop="ratingValue"]',
+            'breadcrumb': '//link[@itemtype="BreadcrumbList"]',
+        }
 
     def validate_results(self, df: pd.DataFrame) -> Dict[str, Any]:
         """

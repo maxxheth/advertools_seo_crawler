@@ -20,38 +20,38 @@ class TechnicalSEOCrawler(BaseCrawler):
         self.check_responsiveness = "all"  # all, mobile, desktop, tablet
         self.playwright_helper = None
 
-    def get_css_selectors(self) -> List[str]:
+    def get_css_selectors(self) -> Dict[str, str]:
         """Return CSS selectors for technical SEO elements."""
-        return [
-            'link[rel="canonical"]',
-            'meta[name="viewport"]',
-            'meta[name="robots"]',
-            'link[rel="alternate"]',
-            'script[type="application/ld+json"]',
-            '[data-nosnippet]',
-            'meta[http-equiv="refresh"]',
-            'link[rel="preconnect"]',
-            'link[rel="dns-prefetch"]',
-            'link[rel="prefetch"]',
-            'link[rel="preload"]',
-            'link[rel="stylesheet"]',
-            'script[src]',
-            'img[loading="lazy"]',
-            'img[src]',
-            'a[href*="http"]',
-        ]
+        return {
+            'canonical': 'link[rel="canonical"]',
+            'viewport': 'meta[name="viewport"]',
+            'robots': 'meta[name="robots"]',
+            'alternate': 'link[rel="alternate"]',
+            'json_ld': 'script[type="application/ld+json"]',
+            'nosnippet': '[data-nosnippet]',
+            'refresh': 'meta[http-equiv="refresh"]',
+            'preconnect': 'link[rel="preconnect"]',
+            'dns_prefetch': 'link[rel="dns-prefetch"]',
+            'prefetch': 'link[rel="prefetch"]',
+            'preload': 'link[rel="preload"]',
+            'stylesheet': 'link[rel="stylesheet"]',
+            'script': 'script[src]',
+            'lazy_img': 'img[loading="lazy"]',
+            'img': 'img[src]',
+            'external_links': 'a[href*="http"]',
+        }
 
-    def get_xpath_selectors(self) -> List[str]:
+    def get_xpath_selectors(self) -> Dict[str, str]:
         """Return XPath selectors for technical SEO elements."""
-        return [
-            '//link[@rel="canonical"]/@href',
-            '//meta[@name="viewport"]/@content',
-            '//meta[@name="robots"]/@content',
-            '//link[@rel="alternate"]/@hreflang',
-            '//script[@type="application/ld+json"]',
-            '//img/@alt',
-            '//a/@href',
-        ]
+        return {
+            'canonical_href': '//link[@rel="canonical"]/@href',
+            'viewport_content': '//meta[@name="viewport"]/@content',
+            'robots_content': '//meta[@name="robots"]/@content',
+            'alternate_hreflang': '//link[@rel="alternate"]/@hreflang',
+            'json_ld': '//script[@type="application/ld+json"]',
+            'img_alt': '//img/@alt',
+            'all_links': '//a/@href',
+        }
 
     def set_playwright_options(
         self,
